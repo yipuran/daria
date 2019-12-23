@@ -1,0 +1,4 @@
+接続情報 エラー : c:/Users/{0}/.daria/dbcon.json
+
+JSON キー {1} の値が見つかりません
+

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.daria.logic.DariaMapper">
+
+<insert id="insert" parameterType="map">
+INSERT INTO ${tablename}
+<foreach collection="columns" item="cname" open="(" close=")" separator=",">
+${cname}
+</foreach>
+VALUES
+<foreach collection="values" item="v" open="(" close=")" separator=",">
+#{v}
+</foreach>
+</insert>
+
+</mapper>

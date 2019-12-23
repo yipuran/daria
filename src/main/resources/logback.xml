@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE logback>
+<configuration>
+
+<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+	<Target>System.out</Target>
+	<encoder>
+		<Pattern>%-23d{yyyy/MM/dd HH:mm:ss.SSS} %-5p [%thread] %m%n</Pattern>
+	</encoder>
+</appender>
+<appender name="STDOUT_DEBUG" class="ch.qos.logback.core.ConsoleAppender">
+   <Target>System.out</Target>
+   <encoder>
+      <Pattern>%-23d{yyyy/MM/dd HH:mm:ss.SSS} %-5p [%thread] %m\t\t\t[%C{0}.%method:%line]%n</Pattern>
+   </encoder>
+</appender>
+<logger name="org.daria">
+	<level value="debug" />
+	<appender-ref ref="STDOUT" />
+</logger>
+
+</configuration>
