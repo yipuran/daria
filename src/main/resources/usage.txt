@@ -1,0 +1,7 @@
+Usage : java -jar daria.jar option Excelfile [outfile]
+
+TRUNCATE TABLE 実行して処理する場合、
+  java -jar daria.jar -b excelfile
+
+INSERT文を outfile に出力するだけの場合、
+  java -jar daria.jar -o excelfile outfile

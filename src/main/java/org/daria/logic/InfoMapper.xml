@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.daria.logic.InfoMapper">
+
+<select id="getTablesOracle" parameterType="string" resultType="org.daria.data.TableInfo">
+SELECT table_name FROM USER_TABLES WHERE table_schema = #{value}
+</select>
+
+<select id="getTablesMySQL" parameterType="string" resultType="org.daria.data.TableInfo">
+SELECT table_name FROM information_schema.tables WHERE table_schema = #{value}
+</select>
+
+<select id="getTablesPostgreSQL" parameterType="string" resultType="org.daria.data.TableInfo">
+SELECT table_name FROM information_schema.tables WHERE table_schema = #{value}
+</select>
+
+<select id="getTablesSQLServer" parameterType="string" resultType="org.daria.data.TableInfo">
+SELECT CONVERT(VARCHAR, TBL.NAME)  AS table_name
+FROM sys.tables AS TBL
+</select>
+
+<select id="getTablesH2" parameterType="string" resultType="org.daria.data.TableInfo">
+SELECT table_name
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = #{value}
+</select>
+
+
+<select id="getColumnOracle" parameterType="map" resultType="org.daria.data.Column">
+SELECT t1.COLUMN_NAME AS COLUMN_NAME
+,t1.DATA_TYPE         AS DATA_TYPE
+,t1.NULLABLE          AS IS_NULLABLE
+FROM USER_TAB_COLUMNS t1
+WHERE t1.TABLE_NAME = #{tablename}
+ORDER BY t1.COLUMN_ID ASC
+</select>
+
+<select id="getColumnMySQL" parameterType="map" resultType="org.daria.data.Column">
+SELECT COLUMN_NAME AS COLUMN_NAME
+, DATA_TYPE
+, IS_NULLABLE
+FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = #{scheme}
+  AND table_name = #{tablename}
+ORDER BY ORDINAL_POSITION ASC
+</select>
+
+<select id="getColumnPostgreSQL" parameterType="map" resultType="org.daria.data.Column">
+SELECT COLUMN_NAME   AS COLUMN_NAME
+, DATA_TYPE          AS DATA_TYPE
+, IS_NULLABLE        AS IS_NULLABLE
+FROM  INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME  = #{tablename}
+ORDER BY ORDINAL_POSITION ASC
+</select>
+
+<select id="getColumnSQLServer" parameterType="map" resultType="org.daria.data.Column">
+SELECT CONVERT(VARCHAR, COL.NAME)  AS COLUMN_NAME
+, t3.DATA_TYPE                     AS DATA_TYPE
+, t3.IS_NULLABLE                   AS IS_NULLABLE
+FROM sys.tables t1
+INNER JOIN sys.columns t2 ON t2.OBJECT_ID = t1.OBJECT_ID
+LEFT JOIN INFORMATION_SCHEMA.COLUMNS t3 ON t2.NAME = t3.COLUMN_NAME AND t1.NAME = t3.TABLE_NAME
+WHERE t1.NAME= #{tablename}
+ORDER BY t2.COLUMN_ID
+</select>
+
+<select id="getColumnH2" parameterType="map" resultType="org.daria.data.Column">
+SELECT COLUMN_NAME   AS COLUMN_NAME
+, TYPE_NAME          AS DATA_TYPE
+, IS_NULLABLE        AS IS_NULLABLE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = #{scheme}
+AND TABLE_NAME = #{tablename}
+ORDER BY ORDINAL_POSITION ASC
+</select>
+
+
+<update id="truncateForOracle" parameterType="string">
+TRUNCATE TABLE ${value} CASCADE
+</update>
+
+<update id="truncateForMySQL" parameterType="string">
+TRUNCATE TABLE ${value}
+</update>
+
+<update id="truncateForPostgreSQL" parameterType="string">
+TRUNCATE TABLE ${value} IDENTITY CASCADE
+</update>
+
+<update id="truncateForSQLServer" parameterType="string">
+TRUNCATE TABLE ${value}
+</update>
+
+<update id="truncateForH2" parameterType="string">
+TRUNCATE TABLE ${value}
+</update>
+
+</mapper>
