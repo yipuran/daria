@@ -13,4 +13,7 @@ Excel で記述したデータを Database テーブルに、TRUNCATE して表�
 
 ・必須カラムはチェックされる。
 
+## 対応するDatabase
+Oracle, MySQL, PostgreSQL, SQLServer, H2
+
 [説明](../../wiki)
