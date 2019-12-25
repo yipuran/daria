@@ -3,7 +3,7 @@
 <mapper namespace="org.daria.logic.DariaMapper">
 
 <insert id="insert" parameterType="map">
-INSERT INTO ${tablename}
+INSERT INTO ${scheme}.${tablename}
 <foreach collection="columns" item="cname" open="(" close=")" separator=",">
 ${cname}
 </foreach>
