@@ -182,7 +182,7 @@ public class DariaLogicImpl implements DariaLogic{
 					columnList.add(headrow.getCell(i).getStringCellValue().toUpperCase());
 				});
 
-				process.accept(InfoMapper.class, s->s.update(InfoMapper.class.getName() + ".truncateFor" + dbtype, sheetname));
+				process.accept(InfoMapper.class, s->s.update(InfoMapper.class.getName() + ".truncateFor" + dbtype, scheme + "." + sheetname));
 				logger.info("■ TRUNCATE TABLE "+ sheetname);
 
 				IntStream.rangeClosed(1, lastRowNum).boxed().forEach(n->{
@@ -209,6 +209,7 @@ public class DariaLogicImpl implements DariaLogic{
 						}
 					}
 					Map<String, Object> pmap = new HashMap<>();
+					pmap.put("scheme", scheme);
 					pmap.put("tablename", sheetname);
 					pmap.put("columns", columnList);
 					pmap.put("values", valuelist);
@@ -216,7 +217,7 @@ public class DariaLogicImpl implements DariaLogic{
 						s.insert(DariaMapper.class.getName() + ".insert", pmap);
 					});
 				});
-				logger.info("■ TABLE " + sheetname + "  insert " + (lastRowNum - 1)+ " rows");
+				logger.info("■ TABLE " + sheetname + "  insert " + lastRowNum + " rows");
 			});
 		}catch(Exception ex){
 			throw new DariaException(ex.getMessage(), ex);
