@@ -83,6 +83,8 @@ public class DariaLogicImpl implements DariaLogic{
 						t.vtype = ValueType.DATETIME;
 					}else if(d.equals("timestamp")){
 						t.vtype = ValueType.DATETIME;
+					}else if(d.indexOf("double") >= 0){
+						t.vtype = ValueType.DOUBLE;
 					}else{
 						t.vtype = ValueType.NUMERIC;
 					}
@@ -122,7 +124,14 @@ public class DariaLogicImpl implements DariaLogic{
 									throw new RuntimeException("データベース　列の型 " + vtype + " に一致しません " + columnList.get(i) + "列  " + n + "行目");
 								}
 							}else{
-								valuelist.add((int)cel.getNumericCellValue());
+								if (!vtype.equals(ValueType.NUMERIC) && !vtype.equals(ValueType.DOUBLE)){
+									throw new RuntimeException("データベース　列の型 " + vtype + " に一致しません " + columnList.get(i) + "列  " + n + "行目");
+								}
+								if (vtype.equals(ValueType.DOUBLE)){
+									valuelist.add(cel.getNumericCellValue());
+								}else{
+									valuelist.add((long)cel.getNumericCellValue());
+								}
 							}
 						}else if(type.equals(CellType.STRING)){
 							valuelist.add(cel.getStringCellValue());
@@ -167,6 +176,8 @@ public class DariaLogicImpl implements DariaLogic{
 						t.vtype = ValueType.DATETIME;
 					}else if(d.equals("timestamp")){
 						t.vtype = ValueType.DATETIME;
+					}else if(d.indexOf("double") >= 0){
+						t.vtype = ValueType.DOUBLE;
 					}else{
 						t.vtype = ValueType.NUMERIC;
 					}
@@ -200,7 +211,14 @@ public class DariaLogicImpl implements DariaLogic{
 									valuelist.add(cel.getDateCellValue().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
 								}
 							}else{
-								valuelist.add((int)cel.getNumericCellValue());
+								if (!vtype.equals(ValueType.NUMERIC) && !vtype.equals(ValueType.DOUBLE)){
+									throw new RuntimeException("データベース　列の型 " + vtype + " に一致しません " + columnList.get(i) + "列  " + n + "行目");
+								}
+								if (vtype.equals(ValueType.DOUBLE)){
+									valuelist.add(cel.getNumericCellValue());
+								}else{
+									valuelist.add((long)cel.getNumericCellValue());
+								}
 							}
 						}else if(type.equals(CellType.STRING)){
 							valuelist.add(cel.getStringCellValue());
@@ -250,6 +268,8 @@ public class DariaLogicImpl implements DariaLogic{
 						t.vtype = ValueType.DATETIME;
 					}else if(d.equals("timestamp")){
 						t.vtype = ValueType.DATETIME;
+					}else if(d.indexOf("double") >= 0){
+						t.vtype = ValueType.DOUBLE;
 					}else{
 						t.vtype = ValueType.NUMERIC;
 					}
@@ -282,8 +302,16 @@ public class DariaLogicImpl implements DariaLogic{
 									valuelist.add(timevalue);
 								}
 							}else{
-								Integer ivalue = (int)cel.getNumericCellValue();
-								valuelist.add(ivalue.toString());
+								if (!vtype.equals(ValueType.NUMERIC) && !vtype.equals(ValueType.DOUBLE)){
+									throw new RuntimeException("データベース　列の型 " + vtype + " に一致しません " + columnList.get(i) + "列  " + n + "行目");
+								}
+								if (vtype.equals(ValueType.DOUBLE)){
+									Double d = cel.getNumericCellValue();
+									valuelist.add(d.toString());
+								}else{
+									Long lvalue = (long)cel.getNumericCellValue();
+									valuelist.add(lvalue.toString());
+								}
 							}
 						}else if(type.equals(CellType.STRING)){
 							valuelist.add("'"+cel.getStringCellValue()+"'");
