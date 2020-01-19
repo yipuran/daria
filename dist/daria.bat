@@ -1,6 +1,6 @@
 @echo off
 
-set excel=
+set excel=%1
 
 @java -jar -Xms1024m -Xmx1024m daria.jar -b %excel%
 
