@@ -13,4 +13,13 @@ VALUES
 </foreach>
 </insert>
 
+<select id="count" parameterType="map" resultType="long">
+SELECT COUNT(*) FROM ${scheme}.${tablename}
+WHERE
+<foreach collection="list" item="i" separator=" AND ">
+${i.name} = #{i.value}
+</foreach>
+
+</select>
+
 </mapper>

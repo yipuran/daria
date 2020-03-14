@@ -70,7 +70,7 @@ public class DariaMain{
 		Logger logger = LoggerFactory.getLogger(DariaMain.class);
 		logger.info("■ Daria Logic  START");
 		try{
-			logic.parseExcel();
+			logic.parseExcel(args[0]);
 			if (args[0].equals("-b")){
 				logic.execute();
 			}
@@ -78,7 +78,9 @@ public class DariaMain{
 				logic.outSql(args[2]);
 			}
 		}catch(DariaException ex){
+			System.err.println("#################");
 			System.err.println("##### Error #####");
+			System.err.println("#################");
 			System.err.println(ex.getMessage());
 		}catch(Exception ex){
 			logger.error(ex.getMessage(), ex);
