@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -31,10 +32,12 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.daria.DariaException;
 import org.daria.DbType;
 import org.daria.data.Column;
+import org.daria.data.Pkvalue;
 import org.daria.data.TableInfo;
 import org.daria.data.ValueType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yipuran.function.ThrowableConsumer;
 import org.yipuran.mybatis.util.SQLProcess;
 import org.yipuran.util.GenericBuilder;
 
@@ -57,7 +60,8 @@ public class DariaLogicImpl implements DariaLogic{
 	 * @see org.daria.logic.DariaLogic#parseExcel()
 	 */
 	@Override
-	public void parseExcel() throws DariaException{
+	public void parseExcel(String option) throws DariaException{
+
 		Map<String, Object> settingmap = new GsonBuilder().create().fromJson(setteingJson, new TypeToken<Map<String, Object>>(){}.getType());
 		SQLProcess process = GenericBuilder.of(()->new SQLProcess(settingmap)).with(SQLProcess::setDatasource, source).build();
 		List<TableInfo> tablelist = process.apply(InfoMapper.class, s->s.selectList(InfoMapper.class.getName() + ".getTables" + dbtype.name(), scheme));
@@ -95,21 +99,31 @@ public class DariaLogicImpl implements DariaLogic{
 				XSSFSheet sheet = book.getSheet(sheetname);
 				int lastRowNum = sheet.getLastRowNum();
 				XSSFRow headrow = sheet.getRow(0);
-				int lastCellNum = (int)headrow.getLastCellNum();
+				int lastCellNum = headrow.getLastCellNum();
 				List<String> columnList = new ArrayList<>();
+				Map<Integer, Boolean> pkindex = new HashMap<>();
 				IntStream.range(0, lastCellNum).boxed().forEach(i->{
 					String key = headrow.getCell(i).getStringCellValue().toUpperCase();
 					if (!columnMap.containsKey(key)) throw new RuntimeException("Excel Error : 列名 " + key + " はテーブルで未定義です" );
 					if (requireMap.containsKey(key)) requireMap.put(key, false);
 					columnList.add(key);
+					// 重複チェック対象カラム？
+					if (headrow.getCell(i).getCellStyle().getFont().getBold()) {
+						pkindex.put(i, true);
+					}
 				});
 				List<String> requireErrlist = requireMap.entrySet().stream().filter(e->e.getValue()).map(e->e.getKey()).collect(Collectors.toList());
 				if (requireErrlist.size() > 0){
 					throw new RuntimeException("Excel Error : 列が不足してます " + requireErrlist.stream().collect(Collectors.joining(", ")) );
 				}
+				Map<String, Integer> pkmap = new HashMap<>();
+				List<List<Object>> pkvaluesList = new ArrayList<>();
+
 				IntStream.rangeClosed(1, lastRowNum).boxed().forEach(n->{
 					XSSFRow row = sheet.getRow(n);
 					List<Object> valuelist = new ArrayList<>();
+					List<String> pklist = new ArrayList<>();
+					List<Object> pkvalues = new ArrayList<>();
 					for(int i=0;i < lastCellNum; i++){
 						XSSFCell cel = row.getCell(i);
 						CellType type = cel.getCellType();
@@ -143,8 +157,61 @@ public class DariaLogicImpl implements DariaLogic{
 						}else{
 							throw new RuntimeException("Excel 型認識エラー " + columnList.get(i) + "列  " + n + "行目");
 						}
+						// for 重複チェック
+						if (pkindex.containsKey(i)){
+							// TRUNCATE しない時、、
+							if (type.equals(CellType.NUMERIC)){
+								if (DateUtil.isCellDateFormatted(cel)){
+									if (vtype.equals(ValueType.DATE)){
+										pkvalues.add(new Pkvalue(columnList.get(i), cel.getDateCellValue().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()));
+									}else if(vtype.equals(ValueType.DATETIME)){
+										pkvalues.add(new Pkvalue(columnList.get(i), cel.getDateCellValue().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()));
+									}
+								}else{
+									pklist.add( Double.toString( cel.getNumericCellValue() ));
+									if (vtype.equals(ValueType.DOUBLE)){
+										pkvalues.add(new Pkvalue(columnList.get(i), cel.getNumericCellValue()));
+									}else{
+										pkvalues.add(new Pkvalue(columnList.get(i), (long)cel.getNumericCellValue()));
+									}
+								}
+							}else if(type.equals(CellType.STRING)){
+								pklist.add(cel.getStringCellValue());
+								pkvalues.add(new Pkvalue(columnList.get(i), cel.getStringCellValue()));
+							}else if(type.equals(CellType.BLANK)){
+								pkvalues.add(null);
+							}
+						}
+					}
+					if (pklist.size() > 0){
+						String pkey = pklist.stream().collect(Collectors.joining("_"));
+						if (pkmap.containsKey(pkey)) {
+							throw new RuntimeException("一意制約エラー  " + n + "行目 が、" + pkmap.get(pkey) + " 行目と重複します");
+						}
+						// TRUNCATE しない時、、
+						if (option.equals("-o")){
+							pkvaluesList.add(pkvalues);
+						}
+						pkmap.put(pkey, n);
 					}
 				});
+				// TRUNCATE しない時 重複チェック
+				if (pkvaluesList.size() > 0){
+					// SQL select で、チェック
+					AtomicInteger line = new AtomicInteger(1);
+					Map<String, Object> pmap = new HashMap<>();
+					pmap.put("scheme", scheme);
+					pmap.put("tablename", sheetname);
+					pkvaluesList.stream().forEach(ThrowableConsumer.of(t->{
+						pmap.put("list", t);
+						long counts = process.apply(DariaMapper.class, s->s.selectOne(DariaMapper.class.getName() + ".count", pmap));
+						if (counts > 0) {
+							String k = pkmap.entrySet().stream().filter(e->e.getValue()==line.get()).findAny().map(e->e.getKey()).orElse("");
+							throw new RuntimeException("一意制約エラー  " + line.get() + "行目 key = " + k);
+						}
+						line.incrementAndGet();
+					}));
+				}
 			});
 		}catch(Exception ex){
 			throw new DariaException(ex.getMessage(), ex);
@@ -187,7 +254,7 @@ public class DariaLogicImpl implements DariaLogic{
 				XSSFSheet sheet = book.getSheet(sheetname);
 				int lastRowNum = sheet.getLastRowNum();
 				XSSFRow headrow = sheet.getRow(0);
-				int lastCellNum = (int)headrow.getLastCellNum();
+				int lastCellNum = headrow.getLastCellNum();
 				List<String> columnList = new ArrayList<>();
 				IntStream.range(0, lastCellNum).boxed().forEach(i->{
 					columnList.add(headrow.getCell(i).getStringCellValue().toUpperCase());
@@ -279,7 +346,7 @@ public class DariaLogicImpl implements DariaLogic{
 				XSSFSheet sheet = book.getSheet(sheetname);
 				int lastRowNum = sheet.getLastRowNum();
 				XSSFRow headrow = sheet.getRow(0);
-				int lastCellNum = (int)headrow.getLastCellNum();
+				int lastCellNum = headrow.getLastCellNum();
 				List<String> columnList = new ArrayList<>();
 				IntStream.range(0, lastCellNum).boxed().forEach(i->{
 					columnList.add(headrow.getCell(i).getStringCellValue().toUpperCase());

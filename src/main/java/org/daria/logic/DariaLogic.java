@@ -7,7 +7,7 @@ import org.daria.DariaException;
  */
 public interface DariaLogic{
 
-	public void parseExcel() throws DariaException;
+	public void parseExcel(String option) throws DariaException;
 
 	public void execute() throws DariaException;
 
