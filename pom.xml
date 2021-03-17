@@ -12,7 +12,6 @@
    <guice.version>4.1.0</guice.version>
 </properties>
 
-
 <repositories>
    <repository>
       <id>yipuran-core</id>
@@ -24,7 +23,6 @@
    </repository>
 </repositories>
 
-
 <dependencies>
    <dependency>
       <groupId>org.yipuran.core</groupId>
@@ -34,7 +32,7 @@
    <dependency>
         <groupId>org.yipuran.mybatis</groupId>
         <artifactId>yipuran-mybatis</artifactId>
-        <version>4.3</version>
+        <version>4.6</version>
    </dependency>
    <dependency>
       <groupId>com.google.code.gson</groupId>
