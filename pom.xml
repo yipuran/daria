@@ -27,12 +27,12 @@
    <dependency>
       <groupId>org.yipuran.core</groupId>
       <artifactId>yipuran-core</artifactId>
-      <version>4.29</version>
+      <version>4.31</version>
    </dependency>
    <dependency>
         <groupId>org.yipuran.mybatis</groupId>
         <artifactId>yipuran-mybatis</artifactId>
-        <version>4.6</version>
+        <version>4.8</version>
    </dependency>
    <dependency>
       <groupId>com.google.code.gson</groupId>
@@ -68,7 +68,7 @@
    <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
-      <version>42.2.5</version>
+      <version>[42.2.13,)</version>
    </dependency>
 
    <!-- ========== for SQLServer ========== -->
